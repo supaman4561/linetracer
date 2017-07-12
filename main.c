@@ -52,6 +52,8 @@ int left_speed ,right_speed;
 
 /* モータ制御関係 */
 volatile int pwm_count;
+int rad_count, rad_control;
+int SPINFLAG;
 
 /* A/D変換関係 */
 volatile unsigned char adbuf[ADCHNUM][ADBUFSIZE];
@@ -82,6 +84,8 @@ int main(void)
   ad_time = 0;
   control_time = 0;
   left_speed = right_speed = 0;
+	rad_count = rad_coutrol = 0;
+	SPINFLAG = 0;
   
   adbufdp = 0;
   lcd_init();
@@ -229,6 +233,29 @@ void pwm_proc(void)
 {
   pwm_count++;
 
+	if(SPINFLAG == 1){
+	leftSpin();	
+	}else if(SPINFLAG == 2){
+		if(rad_control > 0){
+    		rightSpin();
+    		rad_control -= 1;
+		}else{
+		SPINFLAG = 3;
+		}
+  	}else if(SPINFLAG == 3){
+	    PBDR &= 0xfd;
+	    PBDR |= 0x01;
+	    PBDR &= 0xf7;
+     	    PBDR |= 0x04;
+	}else if(SPINFLAG == 4){
+		if(rad_control > 0){
+    		rleftSpin();
+    		rad_control -= 1;
+		}else{
+		SPINFLAG = 5;
+		}
+  	}else{
+		
   if(pwm_count <= left_speed){
     PBDR &= 0xfd;
     PBDR |= 0x01;
@@ -242,6 +269,7 @@ void pwm_proc(void)
   }else{
     PBDR &= 0xf3;
   }
+	}
 
   if(pwm_count >= MAXPWMCOUNT) pwm_count = 0;
   
@@ -252,14 +280,18 @@ void control_proc(void)
   leftval = (unsigned char)ad_read(1);
   rightval = (unsigned char)ad_read(2);
   
-	//９０度の回転がしたい！
-	int rad_count = 0;
 	
-	//まず、１８０度をカウントする
-	
-	//半分にする
-	
-	
+	if(leftval > 100 && rigthval > 100 && SIPNFLAG == 0){
+		rad_count += 1;
+		reftvav = rightval = MAXSPEED;
+		SPINFLAG = 1;
+	}else if(leftval < 100 && rightval < 100 && SPINFLAG == 1){
+		rad_control = rad_count / 2;
+		SPINFLAG == 2;
+	}else if(leftval < 100 && rightval < 100 && SPINFLAG == 3){
+		rad_control = rad_count / 2;
+		SPINFLAG == 4;
+	}else{
 	
   if(leftval > rightval){
     left_speed = MAXSPEED;
@@ -268,5 +300,6 @@ void control_proc(void)
     right_speed = MAXSPEED;
     left_speed = (leftval * MAXSPEED) /rightval;
   }
+	}
 }
 
