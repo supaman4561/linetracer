@@ -42,6 +42,10 @@ volatile int disp_time, ad_time, pwm_time, control_time;
 /* 光検知関係 */
 unsigned char leftval, rightval;
 
+/* Mode flag */
+typedef enum {RUN,SPIN}Status; 
+volatile Status mode = RUN;
+
 /* LCD関係 */
 volatile int disp_flag;
 volatile char lcd_str_upper[LCDDISPSIZE+1];
@@ -161,7 +165,11 @@ void int_imia0(void)
   pwm_time++;
   if(pwm_time >= PWMTIME){
     pwm_time = 0;
+	  if(mode == RUN){
     pwm_proc();
+	  }else{
+		  leftSpin();
+	  }
   }
   
   /* ここにA/D変換開始の処理を直接書く */
@@ -178,6 +186,7 @@ void int_imia0(void)
     control_time = 0;
     control_proc();
   }
+
   
   timer_intflag_reset(0); /* 割り込みフラグをクリア */
   ENINT();                /* CPUを割り込み許可状態に */
@@ -251,6 +260,12 @@ void control_proc(void)
 {
   leftval = (unsigned char)ad_read(1);
   rightval = (unsigned char)ad_read(2);
+	
+	if(leftval >= 150 && rightval >= 150){
+		mode = SPIN;
+	}else{
+		mode = RUN;
+	
   
   if(leftval > rightval){
     left_speed = MAXSPEED;
@@ -259,5 +274,6 @@ void control_proc(void)
     right_speed = MAXSPEED;
     left_speed = (leftval * MAXSPEED) /rightval;
   }
+	}
 }
 
