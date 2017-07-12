@@ -252,6 +252,15 @@ void control_proc(void)
   leftval = (unsigned char)ad_read(1);
   rightval = (unsigned char)ad_read(2);
   
+	//９０度の回転がしたい！
+	int rad_count = 0;
+	
+	//まず、１８０度をカウントする
+	
+	//半分にする
+	
+	
+	
   if(leftval > rightval){
     left_speed = MAXSPEED;
     right_speed = (rightval * MAXSPEED) /leftval;
