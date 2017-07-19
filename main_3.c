@@ -25,8 +25,13 @@
 
 /* モータ制御関連 */
 /* モータの最大速度 */
-#define MAXSPEED 6
-#define SPINSPEED 6
+#define RIGHTSPEED 8
+#define LEFTSPEED 7
+/* 左右のスピンスピード */
+#define RIGHTSPINSPEED 6
+#define LEFTSPINSPEED 6
+volatile int MAXSPEED = 8;
+
 
 /* A/D変換関連 */
 /* A/D変換のチャネル数とバッファサイズ */
@@ -125,8 +130,14 @@ int main(void)
       spin_mode = (spin_mode+1) %2;
 
       /* 表示 */
-      if(spin_mode == LEFTSPIN) strcpy(lcd_str_upper, "L_Spin");
-      else if(spin_mode == RIGHTSPIN) strcpy(lcd_str_upper, "R_Spin");
+      if(spin_mode == LEFTSPIN) {
+        strcpy(lcd_str_upper, "L_Spin");
+        MAXSPEED = 6;
+      }
+      else if(spin_mode == RIGHTSPIN) {
+        strcpy(lcd_str_upper, "R_Spin");
+        MAXSPEED = 8;
+      }
       else if(spin_mode == RUN) strcpy(lcd_str_upper, "RUN     ");
       lcd_cursor(0,0);
       lcd_printstr(lcd_str_upper);
@@ -166,22 +177,21 @@ void int_imia0(void)
     disp_time = 0;
   }
   
-  /* ここにPWM処理に分岐するための処理を書く */
+  /* PWM処理 */
   pwm_time++;
   if(pwm_time >= PWMTIME){
     pwm_time = 0;
     pwm_proc();
   }
   
-  /* ここにA/D変換開始の処理を直接書く */
-  /* A/D変換の初期化・スタート・ストップの処理関数は ad.c にある */
+  /* A/D変換 */
   ad_time++;
   if(ad_time >= ADTIME){
     ad_time = 0;
     ad_scan(0,1);
   }
   
-  /* ここに制御処理に分岐するための処理を書く */
+  /* 制御処理 */
   control_time++;
   if(control_time >= CONTROLTIME){
     control_time = 0;
@@ -212,9 +222,6 @@ void int_adi(void)
 
 
 int ad_read(int ch)
-/* A/Dチャネル番号を引数で与えると, 指定チャネルの平均化した値を返す関数 */
-/* チャネル番号は，0〜ADCHNUM の範囲 　　　　　　　　　　　             */
-/* 戻り値は, 指定チャネルの平均化した値 (チャネル指定エラー時はADCHNONE) */
 {
   int i,ad,bp;
 
@@ -223,8 +230,6 @@ int ad_read(int ch)
     ad = 0;
     bp = adbufdp + ADBUFSIZE;
     
-    /* ここで指定チャネルのデータをバッファからADAVRNUM個取り出して平均する */
-    /* データを取り出すときに、バッファの境界に注意すること */
     /* 平均した値が戻り値となる */
     for(i=0; i<ADAVRNUM; i++){
       ad += adbuf[ch][(bp-i)%ADBUFSIZE];
@@ -242,13 +247,12 @@ void pwm_proc(void)
   /* スピンモードなら */
   if(mode == spin_mode){
     /* Spin */
-    /*if(pwm_count <= SPINSPEED){*/
       if(mode == LEFTSPIN) {
-        if(pwm_count <= SPINSPEED-1) leftSpin();
+        if(pwm_count <= LEFTSPINSPEED-1) leftSpin();
         else brake();
       }
       else if(mode == RIGHTSPIN){ 
-        if(pwm_count <= SPINSPEED) rightSpin();
+        if(pwm_count <= RIGHTSPINSPEED) rightSpin();
         else brake();
       }
   }
