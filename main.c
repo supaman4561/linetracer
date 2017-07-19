@@ -254,10 +254,10 @@ void control_proc(void)
   
   if(leftval > rightval){
     left_speed = MAXSPEED;
-    right_speed = ((rightval + (leftval-rightval) / 2 ) * MAXSPEED) /leftval;
+    right_speed = ((rightval + (leftval-rightval) / 2 ) * left_speed) /leftval;
   }else{
     right_speed = MAXSPEED;
-    left_speed = ((leftval + (rightval-leftval) / 2 ) * MAXSPEED) /rightval;
+    left_speed = ((leftval + (rightval-leftval) / 2 ) * right_speed) /rightval;
   }
 }
 
