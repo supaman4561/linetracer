@@ -38,10 +38,13 @@
 #define ADCHNONE -1
 
 /* モータの動作モードについて */
-typedef enum {TRACE=1, FORWARD, LSPIN, RSPIN} t_mode;
+typedef enum {TRACE=1, FORWARD, LSPIN, RSPIN, LITTLE} t_mode;
 
 /* 割り込み処理に必要な変数は大域変数にとる */
 volatile int disp_time, ad_time, pwm_time, control_time;
+
+/* 時間計測 */
+volatile int time_count, time_count_start;
 
 /* 光検知関係 */
 unsigned char leftval, rightval;
@@ -55,7 +58,7 @@ volatile char lcd_str_lower[LCDDISPSIZE+1];
 int left_speed ,right_speed;
 
 /* モータ制御関係 */
-volatile t_mode modechart[] = {TRACE, LSPIN, TRACE, RSPIN, TRACE, RSPIN, FORWARD, RSPIN, TRACE, LSPIN, TRACE};
+volatile t_mode modechart[] = {TRACE, LSPIN, TRACE, LITTLE, RSPIN, TRACE, RSPIN, FORWARD, RSPIN, TRACE, LSPIN, TRACE};
 volatile int chart_count;
 volatile t_mode mode;
 volatile int pwm_count;
@@ -89,6 +92,8 @@ int main(void)
   disp_time = 0; disp_flag = 1;
   ad_time = 0;
   control_time = 0;
+  time_count = 0;
+  time_count_start = 0;
   left_speed = right_speed = 0;
   chart_count = 0;
   mode = modechart[chart_count];
@@ -110,7 +115,7 @@ int main(void)
 
   /* モータ */
   while(1){
-    chart_count %= 8;
+    chart_count %= 9;
 
     if(~P6DR & 0x01){
       start_flag = 1;
@@ -153,7 +158,7 @@ int main(void)
 
 	moter_stop();
 	wait1ms(1);
-	chart_count++;
+	chart_count+=1;
 	mode = modechart[chart_count];
 	strcpy(lcd_str_upper, "spin now");
 
@@ -169,6 +174,23 @@ int main(void)
 	mode = modechart[chart_count];
 	strcpy(lcd_str_upper, "tracing ");
 	
+      }
+      
+    }
+    else if(mode == LITTLE){
+
+      time_count_start = 1;
+
+      if(time_count <= 10){
+
+	forward();
+
+      }
+      else{
+
+	time_count_start = 0;
+	time_count = 0;
+
       }
       
     }
@@ -215,6 +237,10 @@ void int_imia0(void)
   if(control_time >= CONTROLTIME){
     control_time = 0;
     control_proc();
+  }
+
+  if(time_count_start == 1){
+    time_count++;
   }
   
   timer_intflag_reset(0); /* 割り込みフラグをクリア */
