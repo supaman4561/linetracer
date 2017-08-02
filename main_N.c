@@ -24,14 +24,10 @@
 #define MAXPWMCOUNT 10
 
 /* モータ制御関連 */
-/* モータの最大速度 */
-<<<<<<< HEAD
 #define MAXSPEED 7
 #define SPINSPEED 7
-=======
 #define MAXSPEED 10
 #define SPINSPEED 6
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
 
 /* A/D変換関連 */
 /* A/D変換のチャネル数とバッファサイズ */
@@ -43,11 +39,8 @@
 #define ADCHNONE -1
 
 /* モータの動作モードについて */
-<<<<<<< HEAD
 typedef enum {TRACE=1, FORWARD, LSPIN, RSPIN, STOP} t_mode;
-=======
 typedef enum {TRACE=1, FORWARD, LSPIN, RSPIN, LITTLE} t_mode;
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
 
 /* 割り込み処理に必要な変数は大域変数にとる */
 volatile int disp_time, ad_time, pwm_time, control_time;
@@ -67,11 +60,8 @@ volatile char lcd_str_lower[LCDDISPSIZE+1];
 int left_speed ,right_speed;
 
 /* モータ制御関係 */
-<<<<<<< HEAD
-=======
 volatile t_mode modechart[] = {TRACE, LSPIN, TRACE, LITTLE, RSPIN, TRACE, RSPIN, FORWARD, RSPIN, TRACE, LSPIN, TRACE};
 volatile int chart_count;
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
 volatile t_mode mode;
 volatile int pwm_count;
 
@@ -86,20 +76,14 @@ int  ad_read(int ch);
 void pwm_proc(void);
 void control_proc(void);
 int is_black(int val);
-<<<<<<< HEAD
-=======
 int is_white(int val);
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
 
 int main(void)
 {
   int start_flag = 0;
-<<<<<<< HEAD
   t_mode modechart[] = {TRACE, LSPIN, TRACE, RSPIN, TRACE, RSPIN, FORWARD, RSPIN, TRACE, LSPIN, TRACE};
   int chart_count;
   int count=0;
-=======
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
   
   /* 初期化 */
   ROMEMU();
@@ -136,11 +120,8 @@ int main(void)
 
   /* モータ */
   while(1){
-<<<<<<< HEAD
     chart_count %= 11;
-=======
     chart_count %= 9;
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
 
     if(~P6DR & 0x01){
       start_flag = 1;
@@ -154,10 +135,7 @@ int main(void)
       strcpy(lcd_str_upper, "stop    ");
       lcd_cursor(0,0);
       lcd_printstr(lcd_str_upper);
-<<<<<<< HEAD
       wait1ms(1);
-=======
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
       moter_brake();
       chart_count = 0;
       mode = modechart[chart_count];
@@ -166,7 +144,6 @@ int main(void)
 
     if(start_flag == 1){
       if(disp_flag == 1){
-<<<<<<< HEAD
 	lcd_str_upper[7] = chart_count + '0';
 	lcd_str_lower[0] = leftval/100 + '0';
 	lcd_str_lower[1] = (leftval/10)%10 + '0';
@@ -176,14 +153,12 @@ int main(void)
 	lcd_str_lower[5] = rightval%10 + '0';
 	lcd_str_lower[6] = is_black(leftval) + '0';
 	lcd_str_lower[7] = is_black(rightval) + '0';
-=======
 	lcd_str_lower[0] = leftval/100 + '0';
 	lcd_str_lower[1] = (leftval/10)%10 + '0';
 	lcd_str_lower[2] = leftval%10 + '0';
 	lcd_str_lower[4] = rightval/100 + '0';
 	lcd_str_lower[5] = (rightval/10)%10 + '0';
 	lcd_str_lower[6] = rightval%10 + '0';
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
 	
 	lcd_cursor(0,0);
 	lcd_printstr(lcd_str_upper);
@@ -192,8 +167,6 @@ int main(void)
       }
       
       disp_flag = 0;
-<<<<<<< HEAD
-    
       
       if(mode == TRACE){
 	
@@ -244,7 +217,6 @@ int main(void)
 	mode = modechart[chart_count];
       
 	}*/
-=======
     }
     
     if(mode == TRACE){
@@ -286,7 +258,6 @@ int main(void)
 	time_count = 0;
 
       }
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
       
     }
     
@@ -435,7 +406,6 @@ void pwm_proc(void)
     }
 
   }
-<<<<<<< HEAD
   /*else if(mode == STOP){
 
     moter_stop();
@@ -446,8 +416,6 @@ void pwm_proc(void)
     moter_brake();
 
     }*/
-=======
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
 
   if(pwm_count >= MAXPWMCOUNT) pwm_count = 0;
   
@@ -461,17 +429,14 @@ void control_proc(void)
   if(mode == TRACE){
     if(leftval > rightval){
       left_speed = MAXSPEED;
-<<<<<<< HEAD
       right_speed = ((rightval + (leftval-rightval) * 3 / 4 ) * left_speed) /leftval;
     }else{
       right_speed = MAXSPEED;
       left_speed = ((leftval + (rightval-leftval) * 3 / 4 ) * right_speed) /rightval;
-=======
       right_speed = ((rightval + (leftval-rightval) / 2 ) * left_speed) /leftval;
     }else{
       right_speed = MAXSPEED;
       left_speed = ((leftval + (rightval-leftval) / 2 ) * right_speed) /rightval;
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
     }
   }
   
@@ -492,8 +457,6 @@ int is_black(int val){
   return result;
   
 }
-<<<<<<< HEAD
-=======
 
 int is_white(int val){
 
@@ -508,4 +471,3 @@ int is_white(int val){
   return result;
   
 }
->>>>>>> 1e5c3f2dba0efa8410f70ddfed33c5b4f209b081
